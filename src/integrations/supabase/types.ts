@@ -14,13 +14,154 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      accounts: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          current_balance: number
+          id: string
+          is_active: boolean
+          is_asset: boolean
+          last_updated: string
+          name: string
+          provider: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          is_asset?: boolean
+          last_updated?: string
+          name: string
+          provider?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          is_asset?: boolean
+          last_updated?: string
+          name?: string
+          provider?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      net_worth_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          net_worth: number
+          snapshot_date: string
+          total_assets: number
+          total_liabilities: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          net_worth?: number
+          snapshot_date?: string
+          total_assets?: number
+          total_liabilities?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          net_worth?: number
+          snapshot_date?: string
+          total_assets?: number
+          total_liabilities?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_settings: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          frequency: string
+          id: string
+          threshold_percentage: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          frequency?: string
+          id?: string
+          threshold_percentage?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          frequency?: string
+          id?: string
+          threshold_percentage?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_net_worth: {
+        Args: { user_uuid: string }
+        Returns: {
+          net_worth: number
+          total_assets: number
+          total_liabilities: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
