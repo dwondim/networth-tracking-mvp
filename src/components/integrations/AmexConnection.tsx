@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { CreditCard, Loader2, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { usePlaidLink } from 'react-plaid-link';
+import { amexService } from '@/services/amexService';
 
 interface AmexConnectionProps {
   onConnectionSuccess?: () => void;
@@ -15,16 +17,57 @@ type ConnectionMethod = 'plaid' | 'direct' | 'manual';
 export function AmexConnection({ onConnectionSuccess }: AmexConnectionProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionMethod, setConnectionMethod] = useState<ConnectionMethod>('plaid');
+  const [linkToken, setLinkToken] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handlePlaidConnection = async () => {
+  // Create Plaid Link token
+  const createLinkToken = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to connect your accounts.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await supabase.functions.invoke('create-plaid-link-token');
+      
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+      
+      setLinkToken(response.data.link_token);
+    } catch (error) {
+      console.error('Error creating link token:', error);
+      toast({
+        title: "Connection Setup Failed",
+        description: "Unable to initialize Plaid connection. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle successful Plaid Link
+  const handlePlaidSuccess = async (publicToken: string) => {
     setIsConnecting(true);
     try {
-      // TODO: Implement Plaid Link integration
-      toast({
-        title: "Plaid Integration",
-        description: "Plaid Link integration will be implemented next.",
+      const response = await supabase.functions.invoke('exchange-plaid-token', {
+        body: { public_token: publicToken }
       });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      toast({
+        title: "Successfully Connected!",
+        description: `Connected ${response.data.accounts} Amex account(s) via Plaid.`,
+      });
+
+      onConnectionSuccess?.();
     } catch (error) {
       console.error('Plaid connection error:', error);
       toast({
@@ -34,6 +77,28 @@ export function AmexConnection({ onConnectionSuccess }: AmexConnectionProps) {
       });
     } finally {
       setIsConnecting(false);
+    }
+  };
+
+  // Plaid Link configuration
+  const plaidConfig = {
+    token: linkToken,
+    onSuccess: handlePlaidSuccess,
+    onExit: () => setIsConnecting(false),
+    onEvent: (eventName: string, metadata: any) => {
+      console.log('Plaid event:', eventName, metadata);
+    }
+  };
+
+  const { open, ready } = usePlaidLink(plaidConfig);
+
+  const handlePlaidConnection = async () => {
+    if (!linkToken) {
+      await createLinkToken();
+      return;
+    }
+    if (ready) {
+      open();
     }
   };
 
@@ -112,13 +177,18 @@ export function AmexConnection({ onConnectionSuccess }: AmexConnectionProps) {
           {connectionMethod === 'plaid' && (
             <Button
               onClick={handlePlaidConnection}
-              disabled={isConnecting}
+              disabled={isConnecting || (linkToken !== null && !ready)}
               className="w-full"
             >
               {isConnecting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Connecting...
+                </>
+              ) : !linkToken ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Initialize Plaid Connection
                 </>
               ) : (
                 <>
