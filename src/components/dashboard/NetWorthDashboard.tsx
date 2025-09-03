@@ -3,9 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, Plus, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, CreditCard, Plus, RefreshCw, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { AmexConnection } from '@/components/integrations/AmexConnection';
 
 interface NetWorthData {
@@ -25,6 +26,7 @@ interface Account {
 }
 
 export function NetWorthDashboard() {
+  const { user, signOut } = useAuth();
   const [netWorthData, setNetWorthData] = useState<NetWorthData>({
     totalAssets: 0,
     totalLiabilities: 0,
@@ -38,7 +40,6 @@ export function NetWorthDashboard() {
 
   const fetchNetWorthData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
           title: "Authentication Required",
@@ -147,17 +148,27 @@ export function NetWorthDashboard() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">Net Worth Dashboard</h1>
-          <p className="text-muted-foreground">Track your financial health in real-time</p>
+          <p className="text-muted-foreground">Welcome back, {user?.email}</p>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          variant="outline"
-          size="sm"
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            onClick={signOut}
+            variant="outline"
+            size="sm"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
       </div>
 
       {/* Net Worth Overview */}
