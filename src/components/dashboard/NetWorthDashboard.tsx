@@ -33,6 +33,7 @@ export function NetWorthDashboard() {
     netWorth: 0
   });
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [userProfile, setUserProfile] = useState<{ first_name?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAmexConnection, setShowAmexConnection] = useState(false);
@@ -47,6 +48,17 @@ export function NetWorthDashboard() {
           variant: "destructive"
         });
         return;
+      }
+
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileError && profileData) {
+        setUserProfile(profileData);
       }
 
       // Get net worth calculation
@@ -148,7 +160,9 @@ export function NetWorthDashboard() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">Net Worth Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {user?.email}</p>
+          <p className="text-muted-foreground">
+            Welcome back, {userProfile?.first_name || user?.email?.split('@')[0] || 'there'}!
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
